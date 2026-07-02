@@ -165,6 +165,19 @@
   .chart-card h3{font-family:'Space Grotesk',sans-serif; font-size:15.5px; margin:0 0 3px; font-weight:600;}
   .chart-card .chart-note{font-size:11.5px; color:var(--text-faint); margin-bottom:14px; font-family:'IBM Plex Mono',monospace;}
   .chart-wrap{position:relative; height:270px;}
+  .donut-center{
+    position:absolute; top:44%; left:50%; transform:translate(-50%,-50%) scale(1);
+    width:56%; text-align:center; pointer-events:none;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .donut-center .dc-value{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--text); line-height:1.15;
+    font-variant-numeric:tabular-nums;
+  }
+  .donut-center .dc-label{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--text-faint);
+    margin-top:5px; text-transform:uppercase; letter-spacing:.04em; line-height:1.3;
+  }
 
   .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:18px;}
   .stat-card{
@@ -176,6 +189,43 @@
   .stat-card small{display:block; margin-top:9px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-faint);}
 
   .legend-note{margin-top:14px; font-size:11.5px; color:var(--text-faint); font-family:'IBM Plex Mono',monospace; line-height:1.6;}
+
+  /* ---------- COMPARE TABLE (portrait of 21st.dev pricing-table, vanilla HTML) ---------- */
+  .compare-wrap{margin-top:28px;}
+  .compare-title{font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; margin:0 0 4px;}
+  .compare-sub{font-size:11.5px; color:var(--text-faint); font-family:'IBM Plex Mono',monospace; margin-bottom:16px;}
+  .compare-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  table.compare-table{border-collapse:separate; border-spacing:6px 0; width:100%; min-width:640px;}
+  table.compare-table thead th{padding:0; vertical-align:bottom;}
+  table.compare-table thead th:first-child{width:190px;}
+  .plan-card{
+    background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--card-accent, var(--green));
+    border-radius:12px; padding:16px 14px 18px; text-align:left; min-width:150px;
+  }
+  .plan-icon{
+    width:26px; height:26px; border-radius:50%; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; margin-bottom:10px;
+  }
+  .plan-icon .bars rect{ fill:var(--card-accent, var(--green)); }
+  .plan-name-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .plan-name{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em; color:var(--text); font-weight:600;}
+  .plan-badge{
+    font-size:9.5px; padding:2px 8px; border-radius:999px; border:1px solid var(--border);
+    color:var(--text-faint); font-family:'IBM Plex Mono',monospace; white-space:nowrap;
+  }
+  .plan-metric{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; margin-top:12px; color:var(--text);}
+  .plan-metric-label{font-size:10.5px; color:var(--text-faint); margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  table.compare-table tbody th{
+    text-align:left; padding:11px 12px; font-size:12.5px; color:var(--text-dim); font-weight:400;
+    border-top:1px solid var(--border); white-space:nowrap;
+  }
+  table.compare-table tbody td{
+    text-align:center; padding:11px 8px; border-top:1px solid var(--border);
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--text);
+  }
+  table.compare-table tbody tr:hover th, table.compare-table tbody tr:hover td{ background:rgba(255,255,255,0.025); }
+  .icon-check{ color:var(--green); }
+  .icon-minus{ color:var(--text-faint); }
 
   /* ---------- FOOTER ---------- */
   footer{
@@ -282,7 +332,10 @@
       <div class="chart-card">
         <h3>Структура доходов отрасли, 2025</h3>
         <div class="chart-note">мобильная связь vs остальные сегменты</div>
-        <div class="chart-wrap"><canvas id="chartStructure"></canvas></div>
+        <div class="chart-wrap">
+          <canvas id="chartStructure"></canvas>
+          <div class="donut-center" id="center-structure"><div class="dc-value">100%</div><div class="dc-label">доходы отрасли</div></div>
+        </div>
       </div>
     </div>
     <div class="stat-row">
@@ -308,23 +361,96 @@
   <section class="panel" id="tab-operators">
     <h2>Операторы «большой четвёрки»</h2>
     <p class="panel-desc">99% мобильных абонентов страны обслуживают четыре федеральных оператора. Цвет закреплён за оператором на всех графиках дашборда.</p>
-    <div class="panel-grid">
-      <div class="chart-card">
-        <h3>Доли рынка по абонентской базе</h3>
-        <div class="chart-note">август 2025, данные РКН · всего 302 млн номеров</div>
-        <div class="chart-wrap"><canvas id="chartShares"></canvas></div>
+    <div class="compare-wrap">
+      <h3 class="compare-title">Сравнение операторов по ключевым метрикам</h3>
+      <div class="compare-sub">2025 г. · цвет карточки соответствует цвету оператора на графиках дашборда</div>
+      <div class="compare-scroll">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>
+                <div class="plan-card" style="--card-accent:var(--green)">
+                  <div class="plan-icon"><svg class="bars" width="13" height="11" viewBox="0 0 16 14"><rect x="0" y="9" width="3" height="5"/><rect x="4.5" y="6" width="3" height="8"/><rect x="9" y="3" width="3" height="11"/><rect x="13.5" y="0" width="3" height="14"/></svg></div>
+                  <div class="plan-name-row"><span class="plan-name">МТС</span><span class="plan-badge">лидер по базе</span></div>
+                  <div class="plan-metric">31%</div>
+                  <div class="plan-metric-label">доля рынка по абонентам</div>
+                </div>
+              </th>
+              <th>
+                <div class="plan-card" style="--card-accent:var(--cyan)">
+                  <div class="plan-icon"><svg class="bars" width="13" height="11" viewBox="0 0 16 14"><rect x="0" y="9" width="3" height="5"/><rect x="4.5" y="6" width="3" height="8"/><rect x="9" y="3" width="3" height="11"/><rect x="13.5" y="0" width="3" height="14"/></svg></div>
+                  <div class="plan-name-row"><span class="plan-name">МегаФон</span><span class="plan-badge">лидер роста OIBDA</span></div>
+                  <div class="plan-metric">20%</div>
+                  <div class="plan-metric-label">доля рынка по абонентам</div>
+                </div>
+              </th>
+              <th>
+                <div class="plan-card" style="--card-accent:var(--amber)">
+                  <div class="plan-icon"><svg class="bars" width="13" height="11" viewBox="0 0 16 14"><rect x="0" y="9" width="3" height="5"/><rect x="4.5" y="6" width="3" height="8"/><rect x="9" y="3" width="3" height="11"/><rect x="13.5" y="0" width="3" height="14"/></svg></div>
+                  <div class="plan-name-row"><span class="plan-name">Билайн</span><span class="plan-badge">лучший рост прибыли</span></div>
+                  <div class="plan-metric">19%</div>
+                  <div class="plan-metric-label">доля рынка по абонентам</div>
+                </div>
+              </th>
+              <th>
+                <div class="plan-card" style="--card-accent:var(--violet)">
+                  <div class="plan-icon"><svg class="bars" width="13" height="11" viewBox="0 0 16 14"><rect x="0" y="9" width="3" height="5"/><rect x="4.5" y="6" width="3" height="8"/><rect x="9" y="3" width="3" height="11"/><rect x="13.5" y="0" width="3" height="14"/></svg></div>
+                  <div class="plan-name-row"><span class="plan-name">Т2</span><span class="plan-badge">лидер MVNO</span></div>
+                  <div class="plan-metric">16%</div>
+                  <div class="plan-metric-label">доля рынка по абонентам</div>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Абонентская база</th>
+              <td>83,2 млн</td><td>79,37 млн</td><td>≈54 млн*</td><td>48,9 млн</td>
+            </tr>
+            <tr>
+              <th>Выручка, 2025</th>
+              <td>807,2 млрд ₽</td><td>525,6 млрд ₽</td><td>334,7 млрд ₽</td><td>288,3 млрд ₽</td>
+            </tr>
+            <tr>
+              <th>Рост выручки, г/г</th>
+              <td>+14,7%</td><td>+8,15%</td><td>+7,7%</td><td>+10,3%</td>
+            </tr>
+            <tr>
+              <th>Рентабельность OIBDA</th>
+              <td>34,6%</td><td>42,3%</td><td>42,7%</td><td>46,1%</td>
+            </tr>
+            <tr>
+              <th>Доля среди молодёжи 12–24</th>
+              <td>25%</td><td>15%</td><td>15%</td><td>32%</td>
+            </tr>
+            <tr>
+              <th>Раскрывает абонбазу с 2023 г.</th>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+              <td><svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+            </tr>
+            <tr>
+              <th>Лидер рынка MVNO</th>
+              <td><svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg></td>
+              <td><svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg></td>
+              <td><svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+            </tr>
+            <tr>
+              <th>Получает частоты 5G (июнь 2026)</th>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+              <td><svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="chart-card">
-        <h3>Выручка операторов, 2025</h3>
-        <div class="chart-note">млрд ₽ · Т2 — мобильный сегмент «Ростелекома»</div>
-        <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Рентабельность OIBDA, 2025</h3>
-        <div class="chart-note">% от выручки</div>
-        <div class="chart-wrap"><canvas id="chartOibda"></canvas></div>
-      </div>
+      <div class="legend-note">* Билайн не раскрывает абсолютную численность абонентов с конца 2023 г.; значение — оценка ComNews на основе общей абонбазы «большой четвёрки». Источники — ComNews, IT Channel News (см. подвал дашборда).</div>
     </div>
+
     <div class="stat-row">
       <div class="stat-card" style="border-left-color:var(--green)">
         <div class="num">83,2 млн</div>
@@ -357,7 +483,10 @@
       <div class="chart-card">
         <h3>Доля мобильного интернет-трафика</h3>
         <div class="chart-note">% от общего объёма трафика, платформа «Экомобайл»</div>
-        <div class="chart-wrap"><canvas id="chartTraffic"></canvas></div>
+        <div class="chart-wrap">
+          <canvas id="chartTraffic"></canvas>
+          <div class="donut-center" id="center-traffic"><div class="dc-value">100%</div><div class="dc-label">трафика</div></div>
+        </div>
       </div>
     </div>
     <div class="stat-row">
@@ -422,7 +551,10 @@
       <div class="chart-card">
         <h3>Доля операторов среди молодёжи 12–24 лет</h3>
         <div class="chart-note">2025, ~7 млн пользователей · Blink</div>
-        <div class="chart-wrap"><canvas id="chartYouth"></canvas></div>
+        <div class="chart-wrap">
+          <canvas id="chartYouth"></canvas>
+          <div class="donut-center" id="center-youth"><div class="dc-value">~7 млн</div><div class="dc-label">польз. 12–24</div></div>
+        </div>
       </div>
       <div class="chart-card">
         <h3>Лидерство Т2 на рынке MVNO</h3>
@@ -525,8 +657,23 @@
     });
   }
 
-  function makeDoughnut(ctx, labels, data, colors){
-    return new Chart(ctx, {
+  function setDonutCenter(elId, big, small, instant){
+    const el = document.getElementById(elId);
+    if(!el) return;
+    const apply = ()=>{
+      el.querySelector('.dc-value').textContent = big;
+      el.querySelector('.dc-label').textContent = small;
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%,-50%) scale(1)';
+    };
+    if(instant){ apply(); return; }
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%,-50%) scale(0.94)';
+    setTimeout(apply, 90);
+  }
+
+  function makeDoughnut(ctx, labels, data, colors, center){
+    const chart = new Chart(ctx, {
       type:'doughnut',
       data:{ labels, datasets:[{ data, backgroundColor:colors, borderColor:'#111823', borderWidth:2, hoverOffset:6 }] },
       options:{
@@ -536,9 +683,20 @@
         plugins:{
           legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, color:'#8598ab', font:{size:11}, padding:14 } },
           tooltip: tooltipStyle
+        },
+        onHover:(evt, active)=>{
+          if(!center) return;
+          if(active && active.length){
+            const idx = active[0].index;
+            setDonutCenter(center.id, data[idx] + (center.suffix||'%'), center.labels[idx]);
+          } else {
+            setDonutCenter(center.id, center.defaultBig, center.defaultSmall);
+          }
         }
       }
     });
+    if(center){ setDonutCenter(center.id, center.defaultBig, center.defaultSmall, true); }
+    return chart;
   }
 
   function makeLine(ctx, labels, datasets){
@@ -566,22 +724,11 @@
 
       charts.structure = makeDoughnut(document.getElementById('chartStructure'),
         ['Мобильная связь','Остальные сегменты'],
-        [63,37], [COLORS.mts, COLORS.other]);
+        [63,37], [COLORS.mts, COLORS.other],
+        { id:'center-structure', labels:['Мобильная связь','Остальные сегменты'], defaultBig:'100%', defaultSmall:'доходы отрасли' });
     },
     operators(){
-      charts.shares = makeDoughnut(document.getElementById('chartShares'),
-        ['МТС — 31%','МегаФон — 20%','Билайн — 19%','Т2 — 16%','Другие — 14%'],
-        [31,20,19,16,14], [COLORS.mts, COLORS.megafon, COLORS.beeline, COLORS.t2, COLORS.other]);
-
-      charts.revenue = makeBar(document.getElementById('chartRevenue'),
-        ['МТС','МегаФон','Билайн','Т2'],
-        [{ data:[807.2,525.6,334.7,288.3], backgroundColor:[COLORS.mts,COLORS.megafon,COLORS.beeline,COLORS.t2], borderRadius:6, maxBarThickness:56 }],
-        { yOpts:{ ticks:{ callback:v=>v+' млрд' } } });
-
-      charts.oibda = makeBar(document.getElementById('chartOibda'),
-        ['МТС','МегаФон','Билайн','Т2'],
-        [{ data:[34.6,42.3,42.7,46.1], backgroundColor:[COLORS.mts,COLORS.megafon,COLORS.beeline,COLORS.t2], borderRadius:6, maxBarThickness:56 }],
-        { yOpts:{ ticks:{ callback:v=>v+'%' }, suggestedMax:55 } });
+      // графики (доли/выручка/OIBDA) убраны — та же информация теперь в таблице сравнения
     },
     arpu(){
       charts.arpu = makeBar(document.getElementById('chartArpu'),
@@ -594,7 +741,8 @@
 
       charts.traffic = makeDoughnut(document.getElementById('chartTraffic'),
         ['МТС — 50%','МегаФон — 29%','Билайн — 20%','Другие — 1%'],
-        [50,29,20,1], [COLORS.mts, COLORS.megafon, COLORS.beeline, COLORS.other]);
+        [50,29,20,1], [COLORS.mts, COLORS.megafon, COLORS.beeline, COLORS.other],
+        { id:'center-traffic', labels:['МТС','МегаФон','Билайн','Другие'], defaultBig:'100%', defaultSmall:'трафика' });
     },
     infra(){
       charts.stations = makeBar(document.getElementById('chartStations'),
@@ -614,7 +762,8 @@
       charts.youth = makeDoughnut(document.getElementById('chartYouth'),
         ['Т2 — 32%','МТС — 25%','МегаФон — 15%','Билайн — 15%','Yota — 6%','T-Mobile — 4%'],
         [32,25,15,15,6,4],
-        [COLORS.t2, COLORS.mts, COLORS.megafon, COLORS.beeline, COLORS.rose, COLORS.other]);
+        [COLORS.t2, COLORS.mts, COLORS.megafon, COLORS.beeline, COLORS.rose, COLORS.other],
+        { id:'center-youth', labels:['Т2','МТС','МегаФон','Билайн','Yota','T-Mobile'], defaultBig:'~7 млн', defaultSmall:'польз. 12–24' });
 
       charts.mvno = makeBar(document.getElementById('chartMvno'),
         ['Т2 (всего)','Т2 (банковский сегмент)'],
